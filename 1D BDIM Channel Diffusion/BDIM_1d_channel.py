@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 from BDIM_utils import Flow1D, exactSolution
 
 nPoints = 500
-eps = 0.01
+eps = 0.02
 t = 1
 steps=int(1e5)
 Re = 10000
@@ -30,8 +30,8 @@ plt.plot(flow.x[:], flow.u[:], color='black', linewidth=1, label=r"O2 BDIM @ $t_
 
 y = np.linspace(0,1,100)
 # plt.plot(y, exactSolution(y, 500, Re), label="Exact solution")
-plt.xlim(-0.02,0.1)
-plt.ylim(0,1)
+# plt.xlim(-0.02,0.1)
+# plt.ylim(0,1)
 plt.ylabel("u")
 plt.xlabel("y")
 plt.plot([-0.01,-0.01], [0,1.1], linestyle='--', color='orange', label='Smoothing region bounds')

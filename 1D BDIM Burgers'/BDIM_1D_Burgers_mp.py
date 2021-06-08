@@ -16,26 +16,24 @@ from multiprocessing import Pool
 np.random.seed(100)
 
 nPoints = 255
-eps = 0.01
+eps = 0.02
 
-t = 1000000
-steps=int(1e8)
+t = 10000
+steps=int(t*100)
 Re = 500
 
 variance = 0.01
-L = 1
 
-delta_Tr = 10
+delta_Tr = 1
 
-extend = 0.02
+extend = 0.05
 
 ##############################
 
+v_scale = np.sqrt(variance*1)
+nu = v_scale*1/Re
 
-v_scale = np.sqrt(variance*L)
-nu = v_scale*L/Re
-
-y = np.linspace(-extend, L+extend, nPoints)
+y = np.linspace(-extend, 1+extend, nPoints)
 
 def func(tup):
     t, steps, pid = tup
@@ -64,9 +62,7 @@ if __name__=="__main__":
     
     # print(flow.u)
     plt.plot(y[:], time_average[:]/v_scale, color='black', linewidth=1, label=r"$\frac{\langle u\rangle}{\sqrt{\sigma L}}$")
-    
-    y = np.linspace(0,1,100)
-    
+        
     plt.ylabel(r"$\frac{\langle u\rangle}{\sqrt{\sigma L}}$")
     plt.xlabel("y")
     # plt.plot([-0.01,-0.01], [0,1.1], linestyle='--', color='orange', label='Smoothing region bounds')
@@ -74,7 +70,7 @@ if __name__=="__main__":
     plt.legend()
     plt.title(f"1D Burgers' flow with Stochastic Forcing - Re = {Re}")
 
-    plt.savefig("temp.png")
+    plt.savefig("1D BDIM Burgers'/temp.png")
     plt.show()
 
-    # np.savetxt("DNS_Re500_255.csv", time_average/v_scale, delimiter=",")
+    np.savetxt("1D BDIM Burgers'/test_Re500_255.csv", np.hstack((y.reshape(-1,1), (time_average/v_scale).reshape(-1,1))), delimiter=",")

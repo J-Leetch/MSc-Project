@@ -22,13 +22,13 @@ class Kernel:
             return 0.0
         
     def mu0(self, d: float):
-        if abs(d) < self.epsilon:
-            return 0.5 * (1 + d / self.epsilon +\
-                          np.sin(d * np.pi / self.epsilon) / np.pi)
-        
-        elif d <= -self.epsilon:
+        if d <= -self.epsilon:
             return 0.0
         
+        elif abs(d) < self.epsilon:
+            return 0.5 * (1 + d / self.epsilon +\
+                          np.sin(d * np.pi / self.epsilon) / np.pi)
+            
         else:
             return 1.0
         
@@ -61,6 +61,8 @@ class Grid1D:
         for i in range(1, self.D.shape[0] -1):
             self.D[i, i-1] = - 1 / (2 * self.spacing)
             self.D[i, i+1] = 1 / (2 * self.spacing)
+
+            
             
     def construct_D2(self):
         self.D2 = np.zeros((self.n, self.n))
@@ -69,7 +71,6 @@ class Grid1D:
             self.D2[i, i-1] = 1 / self.spacing**2
             self.D2[i, i] = -2 / self.spacing**2
             self.D2[i, i+1] = 1 / self.spacing**2
-       
        
         
 class Flow1D(Grid1D):
@@ -92,7 +93,6 @@ class Flow1D(Grid1D):
         
         self.mu1 = np.array([kern.mu1(di) for di in d])
         
-                    
         self.u = np.zeros(self.n)
         
         self.uall = np.zeros(self.n)
@@ -113,13 +113,17 @@ class Flow1D(Grid1D):
     
     
     def BDIM(self, arg):
-        return self.mu0 * arg + self.mu1 * np.matmul(self.D, arg)
+        wall_n_deriv = np.matmul(self.D, arg)
+        wall_n_deriv[wall_n_deriv.shape[0]//2:] = -wall_n_deriv[wall_n_deriv.shape[0]//2:]  
+        #make sure the derviative has the correct direction on both walls
+        return self.mu0 * arg + self.mu1 * wall_n_deriv
         
     
     def step(self):
         self.uall+=self.u
         self.u = self.BDIM(self.u + self.dt * (self.nu * np.matmul(self.D2, self.u)\
-                                               - self.u * np.matmul(self.D, self.u)))
+                                               - np.matmul(self.D, self.u**2)))
+                                               
         if self.i*self.dt > self.delta_Tr:
             self.stoch_force()
             self.i = 0
@@ -139,9 +143,6 @@ class Flow1D(Grid1D):
         
     def stoch_force(self):
         self.u += np.random.normal(scale=self.sigma, size=self.x.shape[0])
-        
-
-        
         
     
         

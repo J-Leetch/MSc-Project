@@ -13,7 +13,7 @@ from BDIM_utils_Burgers import Flow1D #, exactSolution
 np.random.seed(100)
 
 nPoints = 200
-eps = 0.0
+eps = 0.02
 t = 10000
 steps=int(1e6)
 Re = 500
@@ -23,7 +23,7 @@ L = 1
 
 delta_Tr = 0.1
 
-extend = 0.0
+extend = 0.05
 
 ##############################
 

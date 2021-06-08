@@ -22,13 +22,13 @@ class Kernel:
             return 0.0
         
     def mu0(self, d: float) -> float:
-        if abs(d) < self.epsilon:
-            return 0.5 * (1 + d / self.epsilon +\
-                          np.sin(d * np.pi / self.epsilon) / np.pi)
-        
-        elif d <= -self.epsilon:
+        if d <= -self.epsilon:
             return 0.0
         
+        elif abs(d) < self.epsilon:
+            return 0.5 * (1 + d / self.epsilon +\
+                          np.sin(d * np.pi / self.epsilon) / np.pi)
+            
         else:
             return 1.0
         
