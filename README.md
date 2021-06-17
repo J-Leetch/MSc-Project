@@ -31,6 +31,7 @@
 
     - calculate accurate DNS simulations when happy with the problem setup;
     - filter the forcing and DNS results to find LES forcing and exact subgrid model. This should be fairly well handled by standard LES subgrid models, and this is a good test to show physical similarity to 3D turbulence problems.
+    - identify the additional modelling required and find methods to satisfy it *a posteriori*.
     
     
 Other notes:
