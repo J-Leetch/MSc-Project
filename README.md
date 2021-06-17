@@ -36,3 +36,9 @@
     
 Other notes:
     - since there is no pressure/continuity in the Burgers' equation, this will always be different to turbulent fluid flow. Therefore, it may be beneficial to look at the modelling for different terms separately to find general principles for modelling these kind of terms rather than looking at the overall LES errors. Most likely, adding the exact LES subgrid stress will not be sufficient in the smoothing region, and other terms will need to be considered in the immersed model. Hopefully, these will be related to immersion of the remaining terms.
+
+
+## Update on replicating Burgers' problem - 06/21:
+
+See here:
+    https://github.com/J-Leetch/MSc-Project/blob/main/1D%20BDIM%20Burgers'/Update%20Burgers'%20BDIM.docx
