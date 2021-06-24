@@ -12,7 +12,7 @@ from BDIM_utils_Burgers import Flow1D #, exactSolution
 
 np.random.seed(100)
 
-nPoints = 200
+nPoints = 100
 eps = 0.02
 t = 10000
 steps=int(1e6)
@@ -21,7 +21,7 @@ Re = 500
 variance = 0.01
 L = 1
 
-delta_Tr = 0.1
+delta_Tr = 1
 
 extend = 0.05
 
@@ -55,3 +55,4 @@ plt.legend()
 plt.title(f"1D Burgers' flow with Stochastic Forcing - Re = {Re}")
 
 plt.savefig("temp.png")
+

@@ -7,6 +7,8 @@ Created on Mon Apr 26 16:01:08 2021
 
 import numpy as np
 import matplotlib.pyplot as plt
+import scipy.ndimage as ndimage
+from scipy.interpolate import interp1d
 
 class Kernel:
     
@@ -15,7 +17,7 @@ class Kernel:
     
     def kernel(self, x: float, y: float):
         if abs(x-y) < self.epsilon:
-            return 1 + np.cos(abs(x - y) * np.pi / self.epsilon)\
+            return (1 + np.cos(abs(x - y) * np.pi / self.epsilon))\
                     / (2*self.epsilon)
         
         else:
@@ -50,6 +52,7 @@ class Grid1D:
         self.x = x
         self.n = self.x.shape[0]
         self.spacing = abs(self.x[1] - self.x[0])
+        print(self.spacing)
         
         self.construct_D()
         self.construct_D2()
@@ -62,7 +65,6 @@ class Grid1D:
             self.D[i, i-1] = - 1 / (2 * self.spacing)
             self.D[i, i+1] = 1 / (2 * self.spacing)
 
-            
             
     def construct_D2(self):
         self.D2 = np.zeros((self.n, self.n))
@@ -77,7 +79,9 @@ class Flow1D(Grid1D):
     
     def __init__(self, y, epsilon, t, steps, nu, sigma, dTr):
         super().__init__(y)
+        self.DNSGrid = Grid1D(np.linspace(-0.05,1.05,281))
         
+
         self.steps=steps
         self.dt = t/steps
         self.sigma = sigma
@@ -89,9 +93,31 @@ class Flow1D(Grid1D):
         
         d = 0.5 - abs(0.5 - self.x)
         
+        done=False
+        self.kernel = []
+        i=1
+        while not done:
+            k = kern.kernel(i*self.spacing, 0)
+            if k!=0:
+                self.kernel.append(k)
+            else:
+                break
+            i+=1
+        l = len(self.kernel)
+        self.kernel.reverse()
+        self.kernel.append(kern.kernel(0,0))
+        self.kernel+=self.kernel[:-1][::-1]
+        self.kernel=np.array(self.kernel)
+        
         self.mu0 = np.array([kern.mu0(di) for di in d])
         
         self.mu1 = np.array([kern.mu1(di) for di in d])
+
+        d = 0.5 - abs(0.5 - self.DNSGrid.x)
+        
+        self.mu0_DNS = np.array([kern.mu0(di) for di in d])
+        
+        self.mu1_DNS = np.array([kern.mu1(di) for di in d])
         
         self.u = np.zeros(self.n)
         
@@ -103,6 +129,8 @@ class Flow1D(Grid1D):
         
         self.i=1e9
         self.c=0
+
+        self.interior = np.argwhere(0.5 - abs(0.5 - self.x)>0)[:,0]
         
         # plt.plot(self.x[-15:], self.mu0[-15:])
         # plt.show()
@@ -117,13 +145,19 @@ class Flow1D(Grid1D):
         wall_n_deriv[wall_n_deriv.shape[0]//2:] = -wall_n_deriv[wall_n_deriv.shape[0]//2:]  
         #make sure the derviative has the correct direction on both walls
         return self.mu0 * arg + self.mu1 * wall_n_deriv
+
+    def BDIM_DNS(self, arg):
+        wall_n_deriv = np.matmul(self.DNSGrid.D, arg)
+        wall_n_deriv[wall_n_deriv.shape[0]//2:] = -wall_n_deriv[wall_n_deriv.shape[0]//2:]  
+        #make sure the derviative has the correct direction on both walls
+        return self.mu0_DNS * arg + self.mu1_DNS * wall_n_deriv
         
     
     def step(self):
         self.uall+=self.u
         self.u = self.BDIM(self.u + self.dt * (self.nu * np.matmul(self.D2, self.u)\
                                                - np.matmul(self.D, self.u**2)))
-                                               
+                                                                       
         if self.i*self.dt > self.delta_Tr:
             self.stoch_force()
             self.i = 0
@@ -131,18 +165,41 @@ class Flow1D(Grid1D):
         # if self.c%1000==0:
         #     print(f"Est. CFL {max(abs(self.u))*self.dt/self.spacing}")
 
-        # if self.i%1==0:
-        #     plt.plot(self.x[:], self.u[:], color='black', linewidth=1)
-        #     plt.ylabel("u")
-        #     plt.xlabel("y")
-        #     plt.show()
+        if self.i%1==0:
+            plt.plot(self.x[:], self.u[:], color='black', linewidth=1, marker='.')
+            plt.ylabel("u")
+            plt.xlabel("y")
+            plt.show()
             
         self.i+=1
         self.c+=1
         
         
     def stoch_force(self):
-        self.u += np.random.normal(scale=self.sigma, size=self.x.shape[0])
+        """for BDIM with same point density can just do random forcing on each point"""
+
+        # forcing = self.BDIM(np.random.normal(scale=self.sigma, size=self.x.shape[0]))
+        
+        # self.u += forcing            
+
+        ########################################alternative
+
+        DNS_force = np.zeros(281)
+
+        DNS_force[12:267] = np.random.normal(scale=self.sigma, size=255)
+        # plt.plot(self.DNSGrid.x, DNS_force)
+
+        filtered_force = ndimage.convolve(DNS_force, self.kernel) * self.spacing
+        # plt.plot(self.DNSGrid.x, filtered_force)
+        downsampler = interp1d(self.DNSGrid.x, filtered_force)
+
+        down_sample_ImLES_force = downsampler(self.x)
+
+        # plt.plot(self.x, down_sample_ImLES_force)
+        # plt.show()
+
+        self.u += down_sample_ImLES_force
+
         
     
         

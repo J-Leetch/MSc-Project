@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 plt.figure()
 
-nameslist = ["DNS_Re500_255.csv", "test_Re500_255.csv"]
+nameslist = ["DNS_Re500_255.csv", "iLES_Re500_255_nonBDIM.csv", "test.csv", "iLES_Re500_255.csv", "filtDNS_Re500_255.csv"]
 
 for arg in nameslist:
     data = pd.read_csv("1D BDIM Burgers'/"+arg, header=None)

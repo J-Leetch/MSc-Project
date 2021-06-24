@@ -15,10 +15,7 @@ from multiprocessing import Pool
 
 np.random.seed(100)
 
-nPoints = 255
-eps = 0.02
-
-t = 10000
+t = 1000000
 steps=int(t*100)
 Re = 500
 
@@ -28,6 +25,10 @@ delta_Tr = 1
 
 extend = 0.05
 
+nPoints = 255
+
+eps = 2*(1+extend*2)/nPoints
+
 ##############################
 
 v_scale = np.sqrt(variance*1)
@@ -35,8 +36,7 @@ nu = v_scale*1/Re
 
 y = np.linspace(-extend, 1+extend, nPoints)
 
-def func(tup):
-    t, steps, pid = tup
+def func(t, steps, pid):
     flow = Flow1D(y, eps, t, steps, nu, variance, delta_Tr)
     
     if pid==0:
@@ -51,16 +51,15 @@ def func(tup):
     return flow.time_average
 
 if __name__=="__main__":
-    nproc = mp.cpu_count()-1
+    nproc = mp.cpu_count()-2
     
     arg = [(t//nproc, steps//nproc, i) for i in range(nproc)]
     
     with Pool(nproc) as p:
-        res = p.map(func, arg)
+        res = p.starmap(func, arg)
         
     time_average = np.sum(np.array(res), axis=0)/nproc
     
-    # print(flow.u)
     plt.plot(y[:], time_average[:]/v_scale, color='black', linewidth=1, label=r"$\frac{\langle u\rangle}{\sqrt{\sigma L}}$")
         
     plt.ylabel(r"$\frac{\langle u\rangle}{\sqrt{\sigma L}}$")
@@ -73,4 +72,4 @@ if __name__=="__main__":
     plt.savefig("1D BDIM Burgers'/temp.png")
     plt.show()
 
-    np.savetxt("1D BDIM Burgers'/test_Re500_255.csv", np.hstack((y.reshape(-1,1), (time_average/v_scale).reshape(-1,1))), delimiter=",")
+    np.savetxt("1D BDIM Burgers'/test.csv", np.hstack((y.reshape(-1,1), (time_average/v_scale).reshape(-1,1))), delimiter=",")
