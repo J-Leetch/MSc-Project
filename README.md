@@ -1,12 +1,20 @@
 # MSc-Project
 
-## Notebook this week:
+## Progress week 24/06/21:
 
--   Burgers' equation originally created to mimic turbulence with common advective nonlinearity and diffusion -> Re. However, this was dealt a blow when Hopf/ Cole showed it was explicitly integrable (and therefore not chaotic). This removes the sensitivity to initial conditions so important to N-S in setups with boundaries/ forcings at sufficiently high Re. 
+-   Burgers' equation originally created to mimic turbulence with common advective nonlinearity and diffusion -> allowing defition of Re. However, this was dealt a blow when Hopf/ Cole showed it was explicitly integrable (and therefore not chaotic). This removes the sensitivity to initial conditions so important to N-S in setups with boundaries/ forcings at sufficiently high Re. 
 
--   So, can we add suitable forcing to restore this property as well as mimicking turbulence?
--   https://arxiv.org/pdf/nlin/0012033.pdf main source for Burgulence
--   
+-   So, can we add suitable forcing to restore this property as well as mimicking turbulence? Random forcing brings back the chaotic behaviour, making the process more similar to turbulence.
+-   https://arxiv.org/pdf/nlin/0012033.pdf main source for technicalities on burgulence
+-   https://doi.org/10.1063/1.4916132 for LES of Burgulence and low-wavenumber forcing. Can be used as a good validation paper and comparison.
+
+Have created a periodic Burgers' solver to replicate the results in LES paper. The forcing adds random energy at low wavenumbers to allow us to mimic the turbulent energy cascade.Image shows the evolution of the equation:
+
+![Alt Text](https://github.com/J-Leetch/MSc-Project/blob/main/Burgulence.gif)
+
+-   Spent time working out how to match the Re and forcing parameters. Coded using Runge-Kutta 4th order timestepping and 2nd order FD on spatial grid rather than pseudospectral. Now verifying energy spectrum and grid convergence for DNS. After reproduced, I will add the wall back and examine the new energy spectrum/ turbulence characteristics. Then will validate turbulence models using the periodic case (as have the paper as reference) before using similar methods on the BDIM case and observing differences. 
+
+Lots of coding to do this week!
 
 ## Update on turbulence mimicking - 17/06/21:
 
