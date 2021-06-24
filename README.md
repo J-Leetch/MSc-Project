@@ -1,5 +1,12 @@
 # MSc-Project
 
+## Notebook this week:
+
+-   Burgers' equation originally created to mimic turbulence with common advective nonlinearity and diffusion -> Re. However, this was dealt a blow when Hopf/ Cole showed it was explicitly integrable (and therefore not chaotic). This removes the sensitivity to initial conditions so important to N-S in setups with boundaries/ forcings at sufficiently high Re. 
+
+-   So, can we add suitable forcing to restore this property as well as mimicking turbulence?
+-   https://arxiv.org/pdf/nlin/0012033.pdf main source for Burgulence
+-   
 
 ## Update on turbulence mimicking - 17/06/21:
 
