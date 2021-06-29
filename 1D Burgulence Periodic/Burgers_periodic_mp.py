@@ -7,11 +7,11 @@ from Burgers_periodic_utils import Flow1D #, exactSolution
 from multiprocessing import Pool
 import multiprocessing as mp
 
-np.random.seed(100)
+# np.random.seed(100)
 
-nPoints = 512
+nPoints = 1024
 
-t = 1 /14
+t = 5/8
 steps=int(t*10**4)
 
 nu = 0.001
@@ -31,7 +31,7 @@ def func(i):
 
 
 if __name__=="__main__":
-    nproc = 14# mp.cpu_count()
+    nproc = 8 # mp.cpu_count()
     print(f"Using {nproc} processes")
     with Pool(nproc) as p:
         
@@ -39,12 +39,11 @@ if __name__=="__main__":
 
     E = np.vstack(Es)
 
-    TKE_spectrum = np.mean(E, axis=0)
+    TKE_spectrum = np.abs(np.mean(np.fft.fft(E, axis=1), axis=0))
 
-    plt.plot(np.linspace(1,nPoints,nPoints),TKE_spectrum)
+    plt.loglog(np.linspace(1,nPoints//2,nPoints//2),TKE_spectrum[:nPoints//2])
     plt.show()
-    plt.xscale("log")
-    plt.yscale("log")
+
     plt.savefig("Energy spectrum.png")
         # flow.time_average = flow.uall/steps
 

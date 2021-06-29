@@ -33,6 +33,40 @@ class PeriodicGrid1D:
             self.D2[i, i-1] = 1 / self.spacing**2
             self.D2[i, i] = -2 / self.spacing**2
             self.D2[i, i+1] = 1 / self.spacing**2
+
+class PeriodicQUICKGrid1D:
+    
+    def __init__(self, x):
+               
+        self.x = x
+        self.n = self.x.shape[0]
+        self.spacing = abs(self.x[1] - self.x[0])
+
+
+    def QUICK(self, u):
+        # self.faces = np.zeros((u.shape[0], 2))
+        self.du = np.zeros(u.shape)
+
+        for i in range(1, self.u -1):
+            if u[i]>=0:
+                w = 6/8 * u[i-1] + 3/8 * u[i] - 1/8 * u[i-2]
+                e = 6/8 * u[i] + 3/8 * u[i+1] - 1/8 * u[i-1]
+                self.du[i] = (e-w)/self.spacing
+
+            if u[i]<0:
+                w = 6/8 * u[i] + 3/8 * u[i-1] - 1/8 * u[i+1]
+                e = 6/8 * u[i+1] + 3/8 * u[i] - 1/8 * u[i+2]
+                self.du[i] = (e-w)/self.spacing
+
+    def construct_D2(self):
+        self.D2 = np.zeros((self.n+2, self.n+2)) #add ghost cells
+                
+        for i in range(1, self.D2.shape[0] -1):
+            self.D2[i, i-1] = 1 / self.spacing**2
+            self.D2[i, i] = -2 / self.spacing**2
+            self.D2[i, i+1] = 1 / self.spacing**2
+
+            
        
         
 class Flow1D(PeriodicGrid1D):
@@ -47,22 +81,27 @@ class Flow1D(PeriodicGrid1D):
         
         self.u = np.zeros(self.n+2)
 
-        self.A = 0.1
+        self.A = 1*np.sqrt(3)
 
         self.i = 0
-
+        self.c=0
         self.E = np.zeros((self.steps, self.n), dtype=complex)
 
 
     def f(self, u): 
-        self.force(u)
+        u[0] = u[-2]   #forcing needs to be applied to ghost cells as well
+        u[-1] = u[1]
         return (self.nu * np.matmul(self.D2, u)\
-                            - np.matmul(self.D, u**2))  
+                            - np.matmul(self.D, u*u))  
 
 
     def step_rk4(self):
-        if self.i%10**4==0:
-            self.forcing = generate_forcing(min(self.steps-self.i,10**5), self.n, self.A)
+        # if self.i*self.dt>1 or self.i==0:
+        #     self.forcing = generate_forcing(1, self.n, self.A)
+        #     self.c=0
+
+        self.u[0] = self.u[-2]
+        self.u[-1] = self.u[1]
 
         k1 = self.dt * self.f(self.u)
         k2 = self.dt * self.f(self.u + 0.5 * k1)
@@ -70,14 +109,15 @@ class Flow1D(PeriodicGrid1D):
         k4 = self.dt * self.f(self.u + k3)
         self.u = self.u + (k1 + 2*(k2 + k3) + k4) / 6
 
+        self.force()
 
-        self.u[0] = self.u[-2]
-        self.u[-1] = self.u[1]
+        if self.c%1000==0:
+            print(f"Est. CFL {max(abs(self.u))*self.dt/self.spacing}")
 
         TKE = 0.5*self.u[1:-1]**2
 
-        E_k = np.fft.fft(TKE)
-        self.E[self.i,:] = E_k
+        # E_k = np.fft.fft(TKE)
+        self.E[self.i,:] = TKE # E_k
 
         # if self.i%100==0: # and self.i>10000 and self.i<20000:
         #     plt.figure()
@@ -87,9 +127,10 @@ class Flow1D(PeriodicGrid1D):
         #     plt.ylabel("u")
         #     plt.xlabel("y")
         #     plt.show()
-        #     # plt.savefig(f"1D Burgulence Periodic/images/{self.i//100}.png")
+            # plt.savefig(f"1D Burgulence Periodic/images/{self.i//100}.png")
             
         self.i+=1
+        self.c+=1
     
 
     # def step(self):
@@ -112,10 +153,10 @@ class Flow1D(PeriodicGrid1D):
     #     self.i+=1
         
         
-    def force(self, u):
+    def force(self):
 
-        u[1:-1] += self.forcing[self.i, :] #generate_forcing(1,self.n, self.A)[0, :]
-        return u
+        self.u[1:-1] += generate_forcing(1,self.n, self.A)[0, :]
+        # return u
         
     
         
