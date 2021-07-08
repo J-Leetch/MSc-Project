@@ -1,5 +1,37 @@
 # MSc-Project
 
+## Progress report - 08/07/21:
+
+### Pt.1
+
+Time to make very clear distinction between different cases:
+
+-   **Wall-resolved**: can be DNS or LES, filtering for aposteriori analysis is easy since we can simply downsample the DNS grid to the LES grid (given that the number of grid points is set up correctly).
+-   **BDIM**: aims to compute a solution which matches the DNS *(with $\epsilon$ -> 0)*. Grid resolution can be changed independently of the smoothing filter width if wanted and grid convergence can be achieved independently of $\epsilon$ convergence. However, wide grids compared to flow features lead us into more of an LES simulation. If we are in "LES mode", we can't expect to recover a close approximation to the DNS solution using BDIM, so BDIM aren't the right equations to use.
+-   Therefore, we are led to **immersed LES**. Instead, we try to compute the wall-filtered solution directly, with the introduction of additional modelling to make sure we account for the smoothing of functions (BDIM effects) and the smoothing of the field (LES effect). Here, the methods are combined to give a solution with fundamentally different character. This ties together the two length scales: smoothing region width and LES filter width. The two scales must match (or are the same thing 😉) since the wall-filtered solution must have its function transition occur across the same region as the underlying DNS is extended by the LES filtering. This could be a key realisation for attempting to model this problem as well... 
+
+![Alt Text](https://github.com/J-Leetch/MSc-Project/blob/main/key%20plots/ImLES%20scale%20equiv.png)
+
+Key points this week with regard to above:
+
+-   To investigate models for ImLES equations, the wall-filtered field is needed. Since we need reasonable resolution in the smoothing region, downsampling is not ideal. Therefore, choose an explicit filtering to apply to DNS field to give a "target solution" for ImLES. Therefore, there is dependance on the filter chosen. Seems natural to choose the cosine filter used by the BDIM kernel so that the target matches the only explicit filter that is involved in a simulation.
+
+
+Other points:
+-   There is the need to consider how body forces are evaluated from an ImLES solution.
+
+### Pt.2
+
+Interesting result examining the effectiveness of Smagorinsky model in BDIM vs wall-resolved simulations:
+
+![Alt Text](https://github.com/J-Leetch/MSc-Project/blob/main/key%20plots/tuned%20smagorinsky%20BDIM.png)
+![Alt Text](https://github.com/J-Leetch/MSc-Project/blob/main/key%20plots/tuned%20smagorinsky.png)
+
+FRS = fully resovled simulation (DNS); ROM = reduced order model (LES grid but with no model); Smagorinsky optimum (LES simulation with globally optimised - aposteriori - Smagorinsky coefficient)
+
+This showed that the Smagorinsky model can do a better job at correcting sub-grid error in the immersed boundary (IB) context; this is backed up by the higher correlation coefficient between the perfect closure and Smagorinksy terms in the IB case. However, should be taken with a pinch of salt; this was not an ImLES simulation so the "fully resolved BDIM" is a strange thing to try to calculate... Regardless of this though, the result is promising in that it demonstrates how subgrid-like terms are being more effectively modelled with a smoothed boundary than a resolved boundary with all other things equal.
+
+
 ## Energy spectra and channel Burgulence - 01/07/21:
 
 Validated the -2 slope for periodic Burgulence, showing the DNS/BDIM solver is working properly. The solver is nice and stable even using simple 2nd order central finite differencing (although QUICK can be used as well). Also observed the steeper slope (~-16/3) of the channel/bounded Burgulence spectrum in line with expectations.
