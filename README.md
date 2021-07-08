@@ -1,5 +1,23 @@
 # MSc-Project
 
+## Energy spectra and channel Burgulence - 01/07/21:
+
+Validated the -2 slope for periodic Burgulence, showing the DNS/BDIM solver is working properly. The solver is nice and stable even using simple 2nd order central finite differencing (although QUICK can be used as well). Also observed the steeper slope (~-16/3) of the channel/bounded Burgulence spectrum in line with expectations.
+
+![Alt Text](https://github.com/J-Leetch/MSc-Project/blob/main/1D%20Channel%20Burgulence/corrected_spectrum_with_channel_slope.png)
+
+![Alt Text](https://github.com/J-Leetch/MSc-Project/blob/main/1D%20Channel%20Burgulence/Channel%20Burgulence%20BDIM.gif)
+
+Have achieved a continuously forced problem which has a distinct energy spectrum characteristic of the shock dissipation. Similarly to LES, the energy piles up at a cutoff scale without any subgrid modelling; this is promising since it shows close similarity to turbulence LES modelling. Also, the near-wall features seem to be fairly rich in detail (the turbulence hasn't been killed off at the wall) which is important since this is the main area of investigation.
+
+Now, I am in the process of implementing simple subgrid models (starting with Smagorinsky), show them working - as well as they can - on the periodic case and then implement into the channel. Then, I can examine the main objective which is identifying the optimal modelling required at the wall and how this differs from conventional subgrid models.
+
+Notes:
+
+-   Should I be concerned with the "spatio-temporal" LES approach championed in LaBryer? 
+-   As well as being concerned with the energy spectrum in the context of the modelling, must examine how the models preserve statistical structure. Well known that these features are key to turbulence production, transition etc in real flows so this extra layer of carefullness could be important for transferability. 
+
+
 ## Progress week 24/06/21:
 
 -   Burgers' equation originally created to mimic turbulence with common advective nonlinearity and diffusion -> allowing defition of Re. However, this was dealt a blow when Hopf/ Cole showed it was explicitly integrable (and therefore not chaotic). This removes the sensitivity to initial conditions so important to N-S in setups with boundaries/ forcings at sufficiently high Re. 
