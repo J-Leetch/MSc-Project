@@ -37,7 +37,12 @@ class FlowAdapted(Flow1D):
         
         # constant coefficient Smagorinsky
         dudx = np.matmul(self.D, u)
-        CS2   = C**2
+        if C>0:
+          sign=1
+        else:
+          sign=-1
+
+        CS2   = sign*C**2
         d1    = np.abs(dudx)
         d2    = dudx
         d3    = d1*d2
@@ -63,8 +68,8 @@ def process_stats(smagorinsky, perfect_closure):
 
       ropt = [sp.pearsonr(smagorinsky[np.argmin(abs(1-np.array(slope[:, i]))),:,  i], perfect_closure[:, i])[0] for i in range(perfect_closure.shape[1])]
       
-      plt.plot(Copt, label="Optimum coeff")
-      plt.plot(ropt, label="r value")
+      plt.plot(y, Copt, label="Optimum coeff")
+      plt.plot(y, ropt, label="r value", marker='x')
       plt.legend()
       plt.show()
     #   print("Best coefficient: ", Copt)
@@ -106,6 +111,8 @@ if __name__=="__main__":
     filenameuu = f"flowdata/channel_ImLES_uufilt_{eps}.p"
     filenamegrid = f"flowdata/channel_ImLES_y_{eps}.p"
     forcing_filename = "flowdata/channel_ImLES_forcing_0.0078125.p"
+    dij_filename = "flowdata/channel_ImLES_Dij_0.0078125.p"
+
 
     target_LES_grid_res = 256
 
@@ -113,6 +120,7 @@ if __name__=="__main__":
     DNS_uu = pickle.load(open(filenameuu, "rb"))
     DNS_forcing = pickle.load(open(forcing_filename, "rb"))
     dnsgrid = pickle.load(open(filenamegrid, "rb"))
+    # Dij = pickle.load(open(dij_filename, "rb"))
 
     L=1
     extend=eps
@@ -124,6 +132,7 @@ if __name__=="__main__":
     downsampled_u = downsampler(y)
 
     tau_perf = DNS_uu - DNS_u**2
+
     downsampler = downsampletogrid(tau_perf, dnsgrid)
     downsampled_tau_perf = downsampler(y)[:-1]
 
@@ -149,30 +158,70 @@ if __name__=="__main__":
     n= 10
 
     perfect_closure = np.empty((steps-steps//t-2, flow.LES_U.shape[1]))
-    delta_model = np.empty((steps-steps//t-2, flow.LES_U.shape[1]))
-    # tau_perf = np.empty((steps-steps//t-2, flow.LES_U.shape[1]))
-    smagorinsky = np.empty((n, steps-steps//t-2, flow.LES_U.shape[1]))
+    # delta_model = np.empty((steps-steps//t-2, flow.LES_U.shape[1]))
+    tau_perf = np.empty((steps-steps//t-2, flow.LES_U.shape[1]))
+    # smagorinsky = np.empty((n, steps-steps//t-2, flow.LES_U.shape[1]))
 
-    C = np.array([0.75]) #np.linspace(0.7,0.8, n)
+    # modified_smag = np.empty((n, steps-steps//t-2, flow.LES_U.shape[1]))
+
+    C = np.array([0.75]) #np.linspace(-0.8,0.8, n)
     
     for i in tqdm(range(0, steps-steps//t-2), desc="Calculating subgrid terms for each step"):
         stepped_LES = flow.stepLES(i)
-        for c in range(C.shape[0]):
+        # for c in range(C.shape[0]):
             
-            tau = flow.smag(flow.LES_U[i], C=C[c])
+        #     tau = flow.smag(flow.LES_U[i], C=C[c])
             
-            smagorinsky[c][i] = flow.BDIM(-np.matmul(flow.D, tau))
+        #     smagorinsky[c][i] = flow.BDIM(-np.matmul(flow.D, tau))
+            # modified_smag[c][i] = smagorinsky[c][i]
+            # modified_smag[c][i][1:4] = - modified_smag[c][i][1:4]
+            # modified_smag[c][i][-4:-1] = - modified_smag[c][i][-4:-1]
+
         perfect_closure[i] = (flow.LES_U[i+1] - stepped_LES)/flow.dt
-        delta_model[i] = dModel.model(flow.LES_U[i], flow.spacing, flow.nu)
+        # delta_model[i] = dModel.model(flow.LES_U[i], flow.spacing, flow.nu)
+
       
-    for i in np.random.randint(low=0, high=80000, size=5):
-      plt.plot(y, downsampled_tau_perf[i], label="Tau")
-      plt.plot(y, perfect_closure[i], label="Perfect")
-      plt.plot(y, delta_model[i], label="Delta")
-      plt.plot(y, smagorinsky[0][i], label="smag")
-      plt.legend()
-      plt.show()
+    # for i in np.random.randint(low=0, high=80000, size=5):
+    #   plt.plot(y/eps, downsampled_tau_perf[i]+1000, label=r"$T_{ij} from DNS$")
+    #   plt.plot(y/eps, perfect_closure[i]+1000, label="Perfect closure")
+    #   # plt.plot(y, delta_model[i], label="Delta")
+    #   plt.plot(y/eps, smagorinsky[0][i]+1000, label="Smagorinsky model")
+    #   # plt.plot(y, modified_smag[0][i], label="mod smag")
+    #   plt.yscale("log")
+    #   plt.xlabel('x')
+    #   plt.ylabel("Closure term")
+    #   plt.legend()
+    #   plt.show()
 
-    identidy_additional_modelling(downsampled_tau_perf, perfect_closure, y)
+    # identidy_additional_modelling(downsampled_tau_perf, perfect_closure, y)
 
-    bestC = process_stats(smagorinsky, perfect_closure)
+    # bestC = process_stats(smagorinsky, perfect_closure)
+
+    # pickle.dump(perfect_closure, open("flowdata/perfect.p", "wb"))
+    # pickle.dump(downsampled_tau_perf, open("flowdata/tau.p", "wb"))
+    # pickle.dump(perfect_closure-downsampled_tau_perf, open("flowdata/diff.p", "wb"))
+    pickle.dump(flow.LES_U, open("flowdata/ImLES_u.p", "wb"))
+
+    def timevar_gif():
+    
+      for t in tqdm(range(0,19999,50), desc="Saving images for GIF"):
+        plt.figure()
+        plt.plot(y[:64]/eps, perfect_closure[t][:64], label="Perfect closure")
+        plt.legend(loc='upper right')
+        plt.ylim(-400,400)
+        plt.xlabel(r"$y/\epsilon$")
+        plt.savefig(f"images/{t}.png")
+
+    def timevar_x0():
+      t = np.linspace(0,80000,80000)
+      x0 = np.empty(t.shape)
+      for ti in tqdm(range(t.shape[0]), desc="Plotting"):
+        x0[ti] = perfect_closure[ti][2]
+        
+      plt.figure()
+      plt.plot(t, x0, label="Perfect closure at x=0")
+      plt.legend(loc='upper right')
+      plt.xlabel(r"$t$")
+      plt.savefig(f"tplot.png")
+
+    timevar_x0()

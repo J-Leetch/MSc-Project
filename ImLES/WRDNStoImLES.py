@@ -7,7 +7,7 @@ import scipy.signal as sig
 from tqdm import tqdm
 import scipy.interpolate as interp
 
-from BDIM_utils_Burgers import Kernel
+from BDIM_utils_Burgers import Kernel, Grid1D
 
 class AdaptedKernel(Kernel):
     
@@ -52,6 +52,19 @@ def downsampletogrid(arr, y):
     # assert(arr.shape[1]%2!=0, "Must have DNS on odd number of grid points to use this function")
     return interp.interp1d(y, arr)
 
+def Dij(u, x):
+    deriv = np.gradient(u, abs(yext[1]-yext[0]), axis=1, edge_order=2)
+    deriv2 = np.gradient(deriv, abs(yext[1]-yext[0]), axis=1, edge_order=2)
+    filt = filter(deriv2)
+    resid = deriv2 - filt
+    arg = np.argwhere(0.5 - abs(0.5 - x)<0)[:,0]
+
+    resid[arg] = 0
+    return filter(resid)
+
+
+
+
 filename = "flowdata/channel_2048DNS.p"
 forcing_filename = "flowdata/channel_2048_forcing.p"
 
@@ -74,6 +87,8 @@ while True:
     ys -= yspace
 
 yext = np.hstack((np.hstack((extension, y)), (1-np.array(extension))[::-1]))
+
+
 # print(yext.shape)
 pickle.dump(yext, open(f"flowdata/channel_ImLES_y_{epsilon}.p", "wb"))
 
@@ -89,22 +104,26 @@ kern  =  kernel.construct_kernel(yspace)
 # plt.plot(kern)
 # plt.show()
 
-filtered_u = filter(wrDNSext)
-pickle.dump(filtered_u, open(f"flowdata/channel_ImLES_target_{epsilon}.p", "wb"))
-plt.plot(yext, filtered_u[1000])
-del filtered_u
-filtered_uu = filter(wrDNSext**2)
-pickle.dump(filtered_uu, open(f"flowdata/channel_ImLES_uufilt_{epsilon}.p", "wb"))
-del wrDNSext
-del filtered_uu
+dij = Dij(wrDNSext, yext)
+pickle.dump(dij, open(f"flowdata/channel_ImLES_Dij_{epsilon}.p", "wb"))
 
-DNS_force = pickle.load(open(forcing_filename, "rb"))
-DNS_force_ext = extend(DNS_force, yext, len(extension))
-del DNS_force
-filtered_f = filter(DNS_force_ext)
-pickle.dump(filtered_f, open(f"flowdata/channel_ImLES_forcing_{epsilon}.p", "wb"))
-del filtered_f
-del DNS_force_ext
+# filtered_u = filter(wrDNSext)
+# pickle.dump(filtered_u, open(f"flowdata/channel_ImLES_target_{epsilon}.p", "wb"))
+
+# plt.plot(yext, filtered_u[1000])
+# del filtered_u
+# filtered_uu = filter(wrDNSext**2)
+# pickle.dump(filtered_uu, open(f"flowdata/channel_ImLES_uufilt_{epsilon}.p", "wb"))
+# del wrDNSext
+# del filtered_uu
+
+# DNS_force = pickle.load(open(forcing_filename, "rb"))
+# DNS_force_ext = extend(DNS_force, yext, len(extension))
+# del DNS_force
+# filtered_f = filter(DNS_force_ext)
+# pickle.dump(filtered_f, open(f"flowdata/channel_ImLES_forcing_{epsilon}.p", "wb"))
+# del filtered_f
+# del DNS_force_ext
 
 
 # plt.plot(downsample(y, 8), downsample(wrDNS, 8)[1000])

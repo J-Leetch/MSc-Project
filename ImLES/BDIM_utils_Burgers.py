@@ -195,12 +195,12 @@ class Flow1D(Grid1D):
         # if self.c%1000==0:
         #     print(f"Est. CFL {max(abs(self.u))*self.dt/self.spacing}")
 
-        # if self.i%10==0:
-        #     plt.plot(self.x[:], self.u[:], color='black', linewidth=1, marker='.')
-        #     plt.ylabel("u")
-        #     plt.xlabel("y")
-        #     # plt.xlim(-0.02,0.1)
-        #     plt.show()
+        if self.i%20==0:
+            plt.plot(self.x[:], self.u[:], color='black', linewidth=1, marker='.')
+            plt.ylabel("u")
+            plt.xlabel("y")
+            # plt.xlim(-0.02,0.1)
+            plt.show()
             
         self.U[self.i,:] = self.u 
 
