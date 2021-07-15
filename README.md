@@ -1,5 +1,28 @@
 # MSc-Project
 
+## Progress report - 15/07/21:
+
+-   Part of the process here is to characterise this new test case. This kind of documentation will be done with the main terms/KE and immersion stresses so everything can be visualised nicely since it is not something most readers will be used to at all. That involves non-dimensionalising everything and presenting nicely in the thesis. Example of this:
+
+![Alt Text](https://github.com/J-Leetch/MSc-Project/blob/main/ImLES/u.png)
+
+In terms of non-dimensionalisation: space x/L (by channel width of course); time can be non-dimensionalised by the forcing timescale (which is just t=1, you can see this timescale in the DNS plot of u in the group chat); still thinking about the velocity scale though I have the forcing coefficient (although non-D I think) and the viscosity to use, so I could use a local Reynolds number u x grid_spacing/viscosity and then divide by the forcing coefficient to give scaling in terms of the forcing.
+
+Can now visualise modelling that is required additional to LES subgrid stress like so:
+![Alt Text](https://github.com/J-Leetch/MSc-Project/blob/main/ImLES/diff%20log.png)
+
+Have found there is this large peak in the smoothing region (for most of the time). These plots below show the correspondence between the velocity field near the wall and the "delta model" required. Here, a log x scale is used to highlight structure in the smoothing region, and a "symlog" scale is used for the colormap to allow us to see the wide range of the additional model term. (yes, the colormap definitely needs work matching between the plots to improve the visualisation..)
+
+![Alt Text](https://github.com/J-Leetch/MSc-Project/blob/main/ImLES/near%20wall%20u.png)
+![Alt Text](https://github.com/J-Leetch/MSc-Project/blob/main/ImLES/near%20wall%20perfect.png)
+
+This demonstrates qualitatively that the delta model is correlated with the wall gradient in the velocity field, producing a large, discontinuous jump in the diffusive term, and leaving extra modelling to be found as predicted in IP. It seemed that the implicit modelling for BDIM was enough to format the resultant error so that it takes the approximate form of the kernel - hence the "delta model". The same is observed here in this test case on a real simulation. 
+
+Provided this is the actual reason for this phenomenon, the way to model it is to predict the wall gradient in the DNS flow. This is nice, since this is necessary for evaluating real wall stresses from an ImLES simulation anyway. My first instinct in terms of finding a way to do this is by examining the second derivative in the ImLES flow at the outer edge of the smoothing region. This idea is illustrated in the figure below:
+
+![Alt Text](https://github.com/J-Leetch/MSc-Project/blob/main/ImLES/wall%20deriv%20from%202nd%20deriv%20ImLES.png)
+
+
 ## Progress report - 08/07/21:
 
 ### Pt.1
