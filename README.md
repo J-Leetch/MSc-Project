@@ -1,5 +1,26 @@
 # MSc-Project
 
+## Thesis outline - 22/07/21:
+
+After trying to manually find a closure for the ImLES modelling needed on top of the LES subgrid stress - now more convinced that it is not a simple function. I don't feel too guilty about this anymore after remembering the close similarity between this and standard LES wall modelling and the fact that lots of people are using AI to tackle that problem now.
+
+This brings up something to remember for the thesis; it would be very nice to be able to somehow quantify the "ease of modelling" for the current method compared to LES wall modelling. If the modelling is more easily achieved in the ImLES form, that is a huge win since we get the ability to use complex boundary conditions for free in terms of cost. 
+
+-> It is appropriate to now move onto "breaking out the big guns" with ML. However, need to show this is necessary in the thesis to avoid perpetuating the "throw AI at it to fix it" attitude... Therefore, plan to include statistical plots:
+
+-   Single-point correlations between velocity/velocity gradients in the smoothing region and the additional modelling term.
+-   Some attempts at fixing a parameterised form of the wall model term and then looking at the correlation of the parameters with flow field data.
+-   Need to give a reasonable guess for the best simple correlation type closure and then show that it is not very good.
+
+Now thinking about the specifics of an ML "wall model". The key part will be determining the input and output data. This will involve some trial and error. Can again use parameterised forms for the model term or let the ML model independently add forcing at each grid point. 
+
+When investigating the additional modelling I noticed that the LES timestep used had a large impact on the modelling required. Combined with this, there is the point made by https://arxiv.org/pdf/2106.11144.pdf on modelling based on training not just with single timesteps; this demonstrates the temporal picture is quite important to not forget and allows the model to take account for compounding errors/other numerical errors so that more confidence can be had in the a posteriori stability. This approach naturally lends itself to reinforcement learning (RL) since we can create an environment where the agent learns in a run-through of a simulation, but is not necessarily restricted to just RL. The arxiv paper gives little justification for why they used RL and we haven't seen any paper comparing the effectiveness of RL methods to deep learning that takes into account multi-timestep dynamics - so that could be an interesting niche to check out.
+
+Plan for this week -
+
+-   Produce final statistical plots for the wall modelling which should be very close to what I will present in the final report.
+-   Integrate code for learning a model. For deep learning, the data can just be saved and the ML done separately. However, for RL I will code up an environment for the agent to learn in. Hopefully this shouldn't be too bad since I have fortunately done this before! Initially, will use a basic deep Q-learning setup (because I am confident I know exactly how that works, unlike some of the state of the art RL seen in the arxiv paper!). Best to keep it all as simple as possible since I am researching the CFD, not the ML.
+
 ## Progress report - 15/07/21:
 
 -   Part of the process here is to characterise this new test case. This kind of documentation will be done with the main terms/KE and immersion stresses so everything can be visualised nicely since it is not something most readers will be used to at all. That involves non-dimensionalising everything and presenting nicely in the thesis. Example of this:
