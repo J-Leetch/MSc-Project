@@ -1,6 +1,6 @@
 # MSc-Project
 
-## Thesis outline - 22/07/21:
+## Time to let the computer find a solution? - 22/07/21:
 
 After trying to manually find a closure for the ImLES modelling needed on top of the LES subgrid stress - now more convinced that it is not a simple function. I don't feel too guilty about this anymore after remembering the close similarity between this and standard LES wall modelling and the fact that lots of people are using AI to tackle that problem now.
 
