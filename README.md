@@ -1,5 +1,92 @@
 # MSc-Project
 
+## Correlations in ImLES - 29/07/21:
+
+Before diving into the ML, important to work out exactly what we need to model and its characteristics. This requires a detailed summary of the modelling required and related statistics:
+
+### Conventional subgrid stress modelling still works everywhere in ImLES
+
+Can investigate the effectiveness of Smagorinsky modelling of the subgrid stress across the entire domain. Plot the correlation between the Smagorinsky model and the perfect Tij term at different spatial locations. This looks like e.g.:
+
+![Figure_1](https://user-images.githubusercontent.com/46157966/127565972-3edf6483-9b74-44f7-b86c-415836acdde7.png)
+
+![Figure_1](https://user-images.githubusercontent.com/46157966/127566020-c25d5ee3-165d-46a8-9517-94907c15cf8e.png)
+
+with a quality of linear fit which varies like
+
+![Figure_1](https://user-images.githubusercontent.com/46157966/127566123-515b5fdb-fa74-40bd-9a4e-0dd112a8892f.png)
+
+The slope of the linear fit is also not altered significantly:
+
+![Figure_1](https://user-images.githubusercontent.com/46157966/127566276-0a9189ec-f277-4f8a-a5ef-4fec6b569746.png)
+
+demonstrating that subgrid modelling for the convective stresses is working well even in the smoothing region. (note to Gabe: the reason it didn't look so good before was I forgot to apply the BDIM operator to the perfect Tij term when calculating it). This is really nice, since it gives evidence to support the proposal that we shouldn't need to modify the LES modelling we all know and love too significantly.
+
+
+### Subgrid stress is not enough - there is also a wall model term 
+
+We can see this qualitatively through looking at the snapshot plots of the perfect closure with the LES subgrid stress subtracted off. This is the initial procedure to **isolate the wall model**.
+![dudx correlation with wm snapshot 2](https://user-images.githubusercontent.com/46157966/127566560-8579cdc7-b322-426b-954f-ac808983aabd.png)
+
+Now, we can see that this term has a good correlation with the velocity gradient (only in the wall smoothing region of course). This is quantified by looking at density (scatter) plots between the two terms:
+
+![density -0 5](https://user-images.githubusercontent.com/46157966/127566600-6459cf2f-f5e9-41a2-97f5-76412f2cc7a6.png)
+![density 0 02](https://user-images.githubusercontent.com/46157966/127566608-32339ec1-27bb-45d6-a2e7-62c12f89404c.png)
+![density 0 53](https://user-images.githubusercontent.com/46157966/127566615-2782e4cb-b79b-406b-9f9e-fa73b939fca3.png)
+![density 1 04](https://user-images.githubusercontent.com/46157966/127566621-ba53d932-a3b2-4d3d-bb32-b597c3bd4238.png)
+
+
+and then evaluating the Pearson r value for a linear fit. We could fit a polynomial too if needed, since it seems like the data collapses well onto a slightly nonlinear region. The Pearson r value is high here and the slope of the linear fit varies following a simple form through the smoothing region.
+
+![dudx correlation Pearson r vs yeps](https://user-images.githubusercontent.com/46157966/127566684-8e2ff3b2-d583-421c-9f63-bf36f286e39c.png)
+
+![dudx correlation linear fit slope vs yeps](https://user-images.githubusercontent.com/46157966/127566722-8d040c76-2369-461f-85c2-951c6db4c8a1.png)
+
+This shape of the slope variation fits the kernel shape when seen on this grid resolution as shown below. (Another objective is to downsample the LES to different, staggered grids to fill out the resolution in these plots.)
+
+![kernel](https://user-images.githubusercontent.com/46157966/127566816-ba8319d2-8300-43d2-9ded-f9b6a9faa8ec.png)
+
+Therefore, on first glance it would seem the wall model is very simple to model. **BUT** these above results are found using the DNS timestep (effectively an instantaneous time or limit to small time). After coarsening the timestep by a factor of 10, we see a different picture. Correlations are weaker, although the wall model term is smaller due to the larger timestep, and the nice form of the linear fit slopes seen above is distorted. However, (note to Gabe again), the effect is not hugely dramatic (phew..) as seen in our meeting (due to the same coding error as above), which I guess is a good thing.
+
+This brings up a main point of curiosity for the week; we have terms which we calculate based on our velocity field which do not change at all dependending on the timestep used. However, when we look for a perfect closure, it is obvious that this is dependent on the timestep used. There is clearly modelling to be done which considers the state of the flow relative to the grid resolution **and** the time resolution. I think this is the space to be filled by the machine learning models. Using information about our strong, instantaneous time correlations and the state of the flow field, it seems like a good task to give ML to correct our trajectory through time for the massive timesteps we want to take in LES.
+
+However, whilst talking about the difference between perfect closure and the terms we write down in the equations, I need to mention this observation for context:
+
+This plot shows the difference seen between perfect closure and the analytic Tij term where we take a coarsened timestep: #
+
+![snapshot Cij closure 3](https://user-images.githubusercontent.com/46157966/127568059-fa25906b-6b22-48ef-9c84-dfd29ab91fdf.png)
+
+The timestep must have an effect on the degree of dynamic filtering occuring in the simulation, which is not usually considered in analytics. In "classic" LES equations we have no way of considerating this time component. However, when considering ImLES we can use the immersion stress terms to investigate since I think they consider grid filtering and so can possibly translate this dynamic filtering error into something analysable analytically.
+
+Now, Tij is the subgrid stress term calculated by filtering DNS data and the equation
+![image](https://user-images.githubusercontent.com/46157966/127562789-184c70ac-fcdd-410b-9e70-f142c2de7918.png)
+
+and Cij is the term 
+![image](https://user-images.githubusercontent.com/46157966/127562680-1bdadce3-c476-49ed-97fe-396d13d00903.png)
+also calculated as defined using DNS data and filtering.
+
+In the central channel, without the wall model to confuse us, we can think about the correction required to add to Tij so that it matches the perfect closure for the timestep in question. It turns out this correction is very well correlated with the convective subgrid stress Cij: (this plot is made at roughly mid-channel)
+
+![density Cij3 to Tij correction 3](https://user-images.githubusercontent.com/46157966/127568654-7751e1a5-01c1-494f-b068-8f34ead8ff1a.png)
+
+where the y axis is the correction term and the x axis is Cij. This effect is also shown in the snapshot plot above (#) where Cij is plotted and the collapse is demonstrated qualitatively in a snapshot. This seems too strange to be a coincidence since it is found from stepping forward a simulation, including numerical error etc and looking at the perfect closure (relative to DNS) vs the subgrid stress which we would expect to summarise the modelling required based on any normal version of LES equations.
+
+From ImLES equations, this makes sense since Cij appears as a term; immersion stress just recognises that the LES field is still not well resolved on the grid used. I'm not sure where the factor of ~1/3 comes from though!? Could be something to do with having chosen the two filtering operations to match each other, when in reality they should not.
+
+It turns out this analysis using Cij might also be relevant to the wall model and its isolation from the other modelling
+
+Naturally, we want the wall model to be confined to the wall smoothing region. As shown by the plot below, this is achieved by utilising Cij in the isolation of the wall model. The thinking here is that based on the observations seen above - far from the wall where we assume there is no wall model term present at all - Cij must be combined with Tij to give a perfect closure for the subgrid stress. Therefore, we should remove this perfect subgrid stress from the perfect closure at the wall to leave the wall model term. The plot below shows that this is in fact effective, and the wall model is negligble outside the smoothing region when its isolation is treated this way.
+
+![Figure_1](https://user-images.githubusercontent.com/46157966/127569770-5864d4c0-bc2f-437f-8f77-efe7462ca9c4.png)
+
+
+### Summary
+
+-   A machine learning model based on top of these already good correlations is the way to go. We know that short-time correlation is excellent for the wall model, but perhaps stabilisation is needed using ML. When we take tiny timsteps, the wall model is a HUGE term, and I can imagine it might be an unstable addition. However, with longer timesteps, the term can be made smaller but the correlations worsen. Maybe there is a compromise between reliance on the ML model to compensate for correlation errors and, on the other end of the spectrum, the need for the ML model to add stability were we to take small LES timesteps.
+
+-   I have found some surprising application of the ImLES ideas in digging deeper into how subgrid modelling is working. I think it is suprising that Cij pops up and correlates so well in fixing the conceptual gap between the Tij term and the real, perfect subgrid model.
+
+
 ## Time to let the computer find a solution? - 22/07/21:
 
 After trying to manually find a closure for the ImLES modelling needed on top of the LES subgrid stress - now more convinced that it is not a simple function. I don't feel too guilty about this anymore after remembering the close similarity between this and standard LES wall modelling and the fact that lots of people are using AI to tackle that problem now.
