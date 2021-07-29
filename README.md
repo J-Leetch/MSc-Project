@@ -82,9 +82,9 @@ Naturally, we want the wall model to be confined to the wall smoothing region. A
 
 ### Summary
 
--   A machine learning model based on top of these already good correlations is the way to go. We know that short-time correlation is excellent for the wall model, but perhaps stabilisation is needed using ML. When we take tiny timsteps, the wall model is a HUGE term, and I can imagine it might be an unstable addition. However, with longer timesteps, the term can be made smaller but the correlations worsen. Maybe there is a compromise between reliance on the ML model to compensate for correlation errors and, on the other end of the spectrum, the need for the ML model to add stability were we to take small LES timesteps.
+-   A machine learning model based on top of these already good correlations is the way to go. We know that short-time correlation is excellent for the wall model, but perhaps stabilisation is needed using ML. When we take tiny timsteps, the wall model is a HUGE term, and I can imagine it might be an unstable addition. However, with longer timesteps, the term can be made smaller but the correlations worsen. Maybe there is a compromise between reliance on the ML model to compensate for larger correlation errors with longer timesteps and, on the other end of the spectrum, the need for the ML model to somehow maintain stability if we were to take small LES timesteps.
 
--   I have found some surprising application of the ImLES ideas in digging deeper into how subgrid modelling is working. I think it is suprising that Cij pops up and correlates so well in fixing the conceptual gap between the Tij term and the real, perfect subgrid model.
+-   I have found some surprising application of the ImLES ideas in digging deeper into how subgrid modelling is working. I think it is suprising that Cij pops up and correlates so well in fixing the conceptual gap between the Tij term and the real, perfect subgrid model. I would like to think more about the meaning of this term and how it is practically relevant.
 
 
 ## Time to let the computer find a solution? - 22/07/21:
